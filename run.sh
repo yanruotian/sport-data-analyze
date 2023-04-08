@@ -1,24 +1,31 @@
-# srun -G 1 -p rtx2080 bash run.sh | tee run.log
+# srun -G 1 -p rtx2080 bash run.sh
 
 which python3
 
-LR="5e-5"
+LR="1e-4"
 SEED=100
+# MODEL_TYPE="transformer"
+MODEL_TYPE="lstm"
+CRITERIA="macro-f1"
 BATCH_SIZE=1
-INPUT_PATH="/data_new/private/yanruotian/time-analyze/splited/综合数据"
+INPUT_PATH="splited/综合数据"
+OUTPUT_DIR="outputs/${MODEL_TYPE}/criteria=${CRITERIA}/lr=${LR}/seed=${SEED}"
+mkdir -p ${OUTPUT_DIR}
 
 OPTS=""
+OPTS+=" --criteria ${CRITERIA}"
+OPTS+=" --model-type ${MODEL_TYPE}"
 OPTS+=" --seed ${SEED}"
 OPTS+=" --lr ${LR}"
 OPTS+=" --batch-size ${BATCH_SIZE}"
 OPTS+=" --epoch 50"
 OPTS+=" --input-path ${INPUT_PATH}"
-OPTS+=" --output-path outputs"
-OPTS+=" --seq-len 15"
+OPTS+=" --output-path ${OUTPUT_DIR}"
+OPTS+=" --seq-len 5"
 OPTS+=" --eval-step 500"
 OPTS+=" --device cuda"
-OPTS+=" --train-proportion 0.4"
+OPTS+=" --train-proportion 0.6"
 
 CMD="python3 -m sport ${OPTS}"
 echo ${CMD}
-${CMD}
+${CMD} | tee ${OUTPUT_DIR}/run.log

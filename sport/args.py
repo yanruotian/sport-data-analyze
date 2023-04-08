@@ -13,4 +13,13 @@ def getArgs():
     parser.add_argument('--device', type = str, default = 'cuda', help = 'use cpu or cuda')
     parser.add_argument('--train-proportion', type = float, help = 'the proportion of amount from whole data used for train')
     parser.add_argument('--eval-test-rate', type = float, default = 1., help = 'size(eval data) / size(test data)')
+    parser.add_argument(
+        '--model-type', type = str, default = 'lstm', help = 'decide which type of model to use',
+        choices = ('lstm', 'transformer')
+    )
+    parser.add_argument(
+        '--criteria', type = str, default = 'accuracy', help = 'criteria to judge the best model from eval results',
+        choices = ('accuracy', 'macro-f1', 'micro-f1')
+    )
+    parser.add_argument('--early-stopping', type = float, default = float('inf'), help = 'tolerance of eval criteria decrease')
     return parser.parse_args()
