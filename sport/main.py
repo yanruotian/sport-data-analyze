@@ -105,8 +105,10 @@ def train(
                 tensorBatch, labelBatch = batch
                 true.extend(labelBatch.tolist())
                 pred.extend(model.predict(tensorBatch).tolist())
-            print('----- Test -----')
-            print(classification_report(true, pred))
+        print('----- Test -----')
+        print(f'true: {summarizeList(true)}')
+        print(f'pred: {summarizeList(pred)}')
+        print(classification_report(true, pred))
 
 def main(args):
     setSeed(args.seed)

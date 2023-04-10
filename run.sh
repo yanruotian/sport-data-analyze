@@ -1,5 +1,7 @@
 # srun -G 1 -p rtx2080 bash run.sh
 
+# 注意：本脚本版本落后于run.ps1，需要修改后使用
+
 which python3
 
 LR="1e-4"

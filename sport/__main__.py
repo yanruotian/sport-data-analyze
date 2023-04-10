@@ -1,6 +1,7 @@
-from .args import getArgs
+from .args import ARGS
 from .main import main
 
 if __name__ == '__main__':
-    main(getArgs())
+    print(f'args = {ARGS}')
+    main(ARGS)
     

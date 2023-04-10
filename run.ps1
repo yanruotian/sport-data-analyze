@@ -1,12 +1,13 @@
 where.exe python.exe
 
-Set-Variable LR "1e-5"
-Set-Variable SEED 100
+Set-Variable DATASET "conHR"
+Set-Variable LR "5e-3"
+Set-Variable SEED 42
 Set-Variable MODEL_TYPE "lstm"
 Set-Variable CRITERIA "macro-f1"
-Set-Variable BATCH_SIZE 3
-Set-Variable INPUT_PATH "splited/综合数据"
-Set-Variable OUTPUT_DIR "outputs/${MODEL_TYPE}/criteria=${CRITERIA}/lr=${LR}/seed=${SEED}"
+Set-Variable BATCH_SIZE 64
+Set-Variable INPUT_PATH "datasets/splited/${DATASET}/fake"
+Set-Variable OUTPUT_DIR "outputs/${DATASET}/${MODEL_TYPE}/criteria=${CRITERIA}/lr=${LR}/seed=${SEED}"
 
 Write-Output $OUTPUT_DIR
 
@@ -23,13 +24,16 @@ Set-Variable OPTS (
     " --epoch 50" +
     " --input-path ${INPUT_PATH}" +
     " --output-path ${OUTPUT_DIR}" +
-    " --seq-len 5" +
+    " --seq-len 10" +
     " --eval-step 100" +
     " --device cuda" +
     " --train-proportion 0.6" +
-    " --early-stopping 10"
+    " --early-stopping 10" +
+    " --dataset ${DATASET}"
 )
 
 Set-Variable CMD "python.exe -m sport ${OPTS}"
-Write-Output ${CMD}
-powershell.exe -Command "${CMD} > ${OUTPUT_DIR}/run.log"
+Set-Variable LOG_PATH "${OUTPUT_DIR}/run.log"
+Write-Output "${CMD}"
+Write-Output "log path = ${LOG_PATH}"
+powershell.exe -Command "${CMD} > ${LOG_PATH}"

@@ -14,6 +14,10 @@ def getArgs():
     parser.add_argument('--train-proportion', type = float, help = 'the proportion of amount from whole data used for train')
     parser.add_argument('--eval-test-rate', type = float, default = 1., help = 'size(eval data) / size(test data)')
     parser.add_argument(
+        '--dataset', type = str, default = 'comprehensive', help = 'dataset type',
+        choices = ('comprehensive', 'conHR')
+    )
+    parser.add_argument(
         '--model-type', type = str, default = 'lstm', help = 'decide which type of model to use',
         choices = ('lstm', 'transformer')
     )
@@ -23,3 +27,5 @@ def getArgs():
     )
     parser.add_argument('--early-stopping', type = float, default = float('inf'), help = 'tolerance of eval criteria decrease')
     return parser.parse_args()
+
+ARGS = getArgs()
