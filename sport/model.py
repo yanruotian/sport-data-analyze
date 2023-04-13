@@ -2,6 +2,7 @@ import math
 import torch
 
 from torch import nn
+from typing import Type
 
 
 class SeqCls(nn.Module):
@@ -9,11 +10,12 @@ class SeqCls(nn.Module):
     基于LSTM的序列分类模型。
     '''
 
-    def __init__(self, inputSize: int, clsNum: int, hiddenSize: int = 64) -> None:
+    def __init__(self, inputSize: int, clsNum: int, numLayers: int = 2, hiddenSize: int = 64) -> None:
         super().__init__()
         self.LSTM = nn.LSTM(
             input_size = inputSize,
             hidden_size = hiddenSize,
+            num_layers = numLayers,
             batch_first = True,
         )
         self.linear = nn.Linear(hiddenSize, clsNum)
@@ -44,14 +46,13 @@ class PositionalEncoding(nn.Module):
         pe = torch.zeros(max_len, d_model)
         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
         div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
-        pe[:, 0::2] = torch.sin(position * div_term)
-        pe[:, 1::2] = torch.cos(position * div_term)
+        pe[:, 0 :: 2] = torch.sin(position * div_term)
+        pe[:, 1 :: 2] = torch.cos(position * div_term)
         pe = pe.unsqueeze(0).transpose(0, 1)
-        # pe.requires_grad = False
         self.register_buffer('pe', pe)
 
     def forward(self, x):
-        return x + self.pe[:x.size(0), :]
+        return x + self.pe[: x.size(0), :]
     
 def bestNHead(inputSize: int):
     return min((
@@ -79,8 +80,8 @@ class TransAm(nn.Module):
         self.decoder.weight.data.uniform_(-initrange, initrange)
 
     def forward(
-        self, 
-        src: torch.Tensor, src_mask: torch.Tensor | None = None, 
+        self, src: torch.Tensor, 
+        src_mask: torch.Tensor | None = None, 
         src_padding: torch.Tensor | None = None
     ) -> torch.Tensor:
         src = self.pos_encoder(src)
@@ -90,9 +91,27 @@ class TransAm(nn.Module):
     
     def predict(self, inputs: torch.Tensor):
         output: torch.Tensor = self(inputs)
-        # print(f'output = {output}')
-        # print(f'output shape = {output.shape}')
-        # import time
-        # time.sleep(3)
         return output.argmax(dim = -1).to(device = 'cpu')
+
+
+class SeqCompare(nn.Module):
+
+    def __init__(self, inputSize: int, baseModel: str = 'lstm', hiddenSize: int = 64, outputSize: int = 64) -> None:
+        super().__init__()
+        modelType: Type[nn.Module] = {
+            'lstm': SeqCls,
+            'transformer': TransAm,
+        }.get(baseModel)
+        self.encoder = modelType(inputSize = inputSize, hiddenSize = hiddenSize, clsNum = outputSize)
+        self.softmax = nn.Softmax(dim = -1)
+
+    def forward(self, inputs):
+        seqA, seqB = inputs
+        outputA, outputB = self.encoder(seqA), self.encoder(seqB)
+        pA, pB = self.softmax(outputA), self.softmax(outputB)
+        return pA, pB
+
+    def predict(self, inputs):
+        pA, pB = self(inputs)
+        return (pA * pB).sum() > 0.8
     

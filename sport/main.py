@@ -1,4 +1,5 @@
 import os
+import json
 import torch
 
 from torch import nn
@@ -109,6 +110,10 @@ def train(
         print(f'true: {summarizeList(true)}')
         print(f'pred: {summarizeList(pred)}')
         print(classification_report(true, pred))
+        with open(os.path.join(args.output_path, 'test-result.json'), 'w') as file:
+            json.dump(classification_report(
+                true, pred, output_dict = True
+            ), file, ensure_ascii = False)
 
 def main(args):
     setSeed(args.seed)

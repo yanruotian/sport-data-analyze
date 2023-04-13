@@ -1,4 +1,6 @@
-where.exe python.exe
+# 注意：与run.sh对比一致后再使用
+
+where.exe python
 
 Set-Variable DATASET "conHR"
 Set-Variable LR "5e-3"
@@ -9,7 +11,7 @@ Set-Variable BATCH_SIZE 64
 Set-Variable INPUT_PATH "datasets/splited/${DATASET}/fake"
 Set-Variable OUTPUT_DIR "outputs/${DATASET}/${MODEL_TYPE}/criteria=${CRITERIA}/lr=${LR}/seed=${SEED}"
 
-Write-Output $OUTPUT_DIR
+echo $OUTPUT_DIR
 
 if (-not (Test-Path $OUTPUT_DIR)) {
     mkdir -p $OUTPUT_DIR
@@ -32,8 +34,8 @@ Set-Variable OPTS (
     " --dataset ${DATASET}"
 )
 
-Set-Variable CMD "python.exe -m sport ${OPTS}"
+Set-Variable CMD "python -m sport ${OPTS}"
 Set-Variable LOG_PATH "${OUTPUT_DIR}/run.log"
-Write-Output "${CMD}"
-Write-Output "log path = ${LOG_PATH}"
+echo "${CMD}"
+echo "log path = ${LOG_PATH}"
 powershell.exe -Command "${CMD} > ${LOG_PATH}"
