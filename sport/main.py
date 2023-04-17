@@ -1,6 +1,7 @@
 import os
 import json
 import torch
+import readline
 
 from torch import nn
 from typing import List, Type, Callable
@@ -115,7 +116,7 @@ def train(
                 true, pred, output_dict = True
             ), file, ensure_ascii = False)
 
-def main(args):
+def mainTrain(args):
     setSeed(args.seed)
     os.makedirs(args.output_path, exist_ok = True)
     device = torch.device(args.device)
@@ -156,3 +157,67 @@ def main(args):
         lossValues, 
         os.path.join(args.output_path, 'pngs', f'loss.png'),
     )
+
+def main(args):
+    mode: str = args.mode
+    if mode == 'train':
+        mainTrain(args)
+    elif mode == 'i-predict':
+        mainIPredict(args)
+    else:
+        print(f'unsupported mode: {mode}')
+
+
+PREDICT_DICT = {
+    'lfw0b43pkwp0': 0, 'z40j59eifo85': 1, 'wbzacaofn94g': 2, 'si0y4kl9omvy': 3, 'inr26rmgidwx': 4, 'htvpwpb5aafl': 5, 'k38asku1lu74': 6, '8i91ltam916f': 7, 'fnuba4pgq27v': 8, 'nkkvdlu8dou7': 9, '1wc8auern8m3': 10, 'szy72isrfejp': 11, 
+    'vz3601s7g83t': 12, 'i4tp4aoltxmt': 13, 'cy3l8w6ha539': 14, 'p5j807r8b4va': 15, '7c8q60ulbk6z': 16, 'fu8er5d20z24': 17, 'y0zhwt78b52z': 18, '44sq6x2mkqbm': 19, 'qb00avvyx7qg': 20, 'ghewogphloe6': 21, 'dj21vpnzb64s': 22, 'j0csc3p7qnv6': 23, 'by7wui29w0k5': 24, 'ss1xqchxxgp8': 25, 
+    'yd1bzm0eqsgk': 26, 'w8yyb81gssry': 27, '1kf2s9uqajcc': 28, 'nk8tmb2we98q': 29, '48amhzr91v6y': 30, 'afxt0mo9w6b3': 31, '9g3auj21gc0g': 32, 'y6d0px90vwfe': 33, 'fk4ajpmie2mf': 34, 'aeuksddgoqti': 35, 'q4jtplrsog9e': 36,
+    'f0sy5trjkc5d': 37, '4na6mae3nrqd': 38, '0v4x1y2orxtw': 39, 'fjn044ww10bk': 40, 'w43ey7lsn17e': 41, '1gdhrlimd8uz': 42, 'vxg5nxskf5ur': 43, 'zhhmhwl4aqnb': 44, 'ixdgra4112vo': 45, 'vsecn8voe3fr': 46, 'e9r3ja41q289': 47, 'gixt35u1izh7': 48, 
+    'afbmdy1fwfp5': 49, '7mull4siaunn': 50, '17td3419b3he': 51, '343jo1ql3smt': 52, 'slmwb5s0k1nb': 53, 'k8fvmppzljsc': 54, 'lstsrlxkvl1y': 55, '677ba49wir1t': 56, '967gqiujnp0p': 57, '9wkpsvmmwis0': 58, 'qwnp27iv5o5g': 59, 'i6jryjc0nw3e': 60, 
+    'ee031wizw8gk': 61, 'n9tcspumphp0': 62, 'z8vgs3wcwzl1': 63, 'mmnlbw6yxyrf': 64, 'oa1rvw0nde9s': 65, 'bk5ng7qyk9q9': 66, 'ru3pomjgeu14': 67, '00rqww8xgysa': 68, 'hn9qkh6i3kic': 69, 'pd9q9l8saw0v': 70, 'g1wmqimoghbs': 71, 'sui5rciafuo5': 72, '70s7tx7k22ig': 73, '4mv543gtysjt': 74,
+}
+
+def readInputLine(line: str, inputs: List[List[int]]):
+    try:
+        inputs.append(list(map(int, line.split(','))))
+    except Exception as e:
+        print(f'err occur in line "{line}"')
+        print(f'exception: {e}')
+
+def mainIPredict(args):
+    setSeed(args.seed)
+    device = torch.device(args.device)
+    clsNumDict = {
+        value: key for key, value in PREDICT_DICT.items()
+    }
+    modelType: Type[nn.Module] = {
+        'lstm': SeqCls,
+        'transformer': TransAm,
+    }.get(args.model_type)
+    model = modelType(
+        inputSize = 3,
+        clsNum = len(clsNumDict),
+    ).to(device)
+    model.load_state_dict(torch.load(args.input_path))
+    inputs: List[int] = []
+    model.eval()
+    with torch.no_grad():
+        while True:
+            line = input('> ').strip()
+            if line == '.end':
+                modelOutput: torch.Tensor = model(
+                    torch.as_tensor([inputs], device = device).float()
+                )
+                clsResult = modelOutput.argmax(dim = -1).tolist()[0]
+                print(f'cls result: {clsNumDict.get(clsResult)}')
+                inputs = []
+            elif line == '.exit':
+                print('exiting...')
+                break
+            elif line.startswith('.read '):
+                filePath = line[len('.read ') : ].strip()
+                with open(filePath, 'r') as file:
+                    for line in file:
+                        readInputLine(line, inputs)
+            else:
+                readInputLine(line, inputs)

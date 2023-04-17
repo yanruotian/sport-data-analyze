@@ -18,6 +18,10 @@ def getArgs():
         choices = ('comprehensive', 'conHR')
     )
     parser.add_argument(
+        '--mode', type = str, default = 'train', help = 'train or predict',
+        choices = ('train', 'i-predict'),
+    )
+    parser.add_argument(
         '--model-type', type = str, default = 'lstm', help = 'decide which type of model to use',
         choices = ('lstm', 'transformer')
     )
